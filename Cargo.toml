@@ -1,0 +1,15 @@
+[package]
+name = "pang_examples"
+edition = "2024"
+version = "0.1.0"
+authors = ["qrzbing <qrzbingfoxmail.com>"]
+license = "MIT OR Apache-2.0"
+
+[lib]
+name = "pang_examples"
+path = "src/lib.rs"
+
+[dependencies]
+env_logger = "0.11.8"
+log = "0.4.27"
+pang = { path = "../pang/pang" }
