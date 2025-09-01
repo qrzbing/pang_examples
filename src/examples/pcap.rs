@@ -86,7 +86,10 @@ pub fn pcap_lang() -> Language {
 mod tests {
     use std::{env, fs, sync::Once};
 
-    use crate::examples::{ethernet_frame::ethernet_frame_grammar, ipv4::{ipv4_grammar, ipv4_options_grammar}};
+    use crate::examples::{
+        ethernet_frame::ethernet_frame_grammar,
+        ipv4::{ipv4_grammar, ipv4_options_grammar},
+    };
 
     use super::*;
 
