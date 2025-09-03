@@ -3,8 +3,9 @@
 use std::collections::{BTreeMap, HashSet};
 use std::sync::Arc;
 
+use pang::exp_cb;
 use pang::{
-    DerivationTree, ExpansionCallback, Grammar, Language, exp, exp_with_opts, grammar, nt, opts,
+    DerivationTree, Grammar, Language, exp, grammar, nt,
     parser::callback::little_endian_bytes_to_usize, symbol::DecodeError, t_bytes, t_bytes_val,
     t_dyn,
 };
@@ -53,24 +54,23 @@ fn pcap_grammar() -> Grammar {
         "ts_usec" => vec![exp(vec![t_bytes(4)])],
         "incl_len" => vec![exp(vec![t_bytes(4)])],
         "orig_len" => vec![exp(vec![t_bytes(4)])],
-        "pcap_body" => vec![exp_with_opts(vec![t_dyn()], opts!(
-            "length_calculator" => body_callback as ExpansionCallback
-        ))]
+        "pcap_body" => vec![exp_cb(vec![t_dyn()], Some(body_decode_callbackfn), None)]
     }
 }
 
-fn body_callback(
-    parent_context: &BTreeMap<String, Arc<DerivationTree>>,
-) -> Result<usize, DecodeError> {
-    let incl_len_tree = parent_context.get("incl_len").ok_or(DecodeError::Invalid(
+pub fn body_decode_callbackfn<'a>(
+    input: &'a [u8],
+    context: &BTreeMap<String, Arc<DerivationTree>>,
+) -> Result<(&'a [u8], Vec<u8>), DecodeError> {
+    let incl_len_tree = context.get("incl_len").ok_or(DecodeError::Invalid(
         "Symbol not found in context for length calculation",
     ))?;
 
-    // debug!("incl_len_tree bytes: {:#?}", incl_len_tree.to_bytes());
-
     let incl_len = little_endian_bytes_to_usize(&incl_len_tree.to_bytes())?;
 
-    Ok(incl_len as usize)
+    let (slice_to_parse, remaining_input) = input.split_at(incl_len);
+
+    Ok((remaining_input, slice_to_parse.to_vec()))
 }
 
 /// Generate a Pcap language.
@@ -138,9 +138,7 @@ mod tests {
         let grammar = pcap_grammar()
             .extend_grammar(&grammar! {
                 "pcap_body" => vec![
-                    exp_with_opts(vec![nt("ethernet_frame")], opts!{
-                        "length_calculator" => body_callback as ExpansionCallback
-                    })
+                    exp_cb(vec![nt("ethernet_frame")], Some(body_decode_callbackfn), None)
                 ]
             })
             .extend_grammar(&ethernet_frame_grammar())

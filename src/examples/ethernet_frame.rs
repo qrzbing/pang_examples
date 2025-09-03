@@ -4,8 +4,8 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use pang::{
-    DerivationTree, ExpansionCallback, Grammar, exp, exp_with_opts, grammar, nt, opts,
-    parser::callback::big_endian_bytes_to_usize, symbol::DecodeError, t_bytes, t_dyn,
+    DerivationTree, Grammar, exp, exp_cb, grammar, nt, parser::callback::big_endian_bytes_to_usize,
+    symbol::DecodeError, t_bytes, t_dyn,
 };
 
 pub fn ethernet_frame_grammar() -> Grammar {
@@ -25,53 +25,51 @@ pub fn ethernet_frame_grammar() -> Grammar {
         "src_mac" => vec![exp(vec![t_bytes(6)])],
         "ether_type_1" => vec![exp(vec![t_bytes(2)])],
         "tci" => vec![
-            exp_with_opts(vec![t_dyn()], opts!{
-                "length_calculator" => tci_callback as ExpansionCallback,
-            })
+            exp_cb(vec![t_dyn()], Some(tci_decode_callbackfn), None)
         ],
-        "ether_type_2" => vec![exp_with_opts(vec![t_dyn()], opts!{
-            "length_calculator" => ether_type_2_callback as ExpansionCallback,
-        })],
+        "ether_type_2" => vec![exp_cb(vec![t_dyn()], Some(tci_decode_callbackfn), None)],
         "ethernet_body" => vec![exp(vec![t_dyn()])]
     }
 }
 
-fn tci_callback(
-    parent_context: &BTreeMap<String, Arc<DerivationTree>>,
-) -> Result<usize, DecodeError> {
-    let ether_type_1_tree = parent_context
-        .get("ether_type_1")
-        .ok_or(DecodeError::Invalid(
-            "Symbol not found in context for length calculation",
-        ))?;
+pub fn tci_decode_callbackfn<'a>(
+    input: &'a [u8],
+    context: &BTreeMap<String, Arc<DerivationTree>>,
+) -> Result<(&'a [u8], Vec<u8>), DecodeError> {
+    let ether_type_1_tree = context.get("ether_type_1").ok_or(DecodeError::Invalid(
+        "Symbol not found in context for length calculation",
+    ))?;
 
     let ether_type_1_val = big_endian_bytes_to_usize(&ether_type_1_tree.to_bytes())?;
 
     // ether_type_1_val == ether_type_enum::ieee_802_1q_tpid
-    if ether_type_1_val == 0x8100 {
-        Ok(2)
+    let (slice_to_parse, remaining_input) = if ether_type_1_val == 0x8100 {
+        input.split_at(2)
     } else {
-        Ok(0)
-    }
+        input.split_at(0)
+    };
+
+    Ok((remaining_input, slice_to_parse.to_vec()))
 }
 
-fn ether_type_2_callback(
-    parent_context: &BTreeMap<String, Arc<DerivationTree>>,
-) -> Result<usize, DecodeError> {
-    let ether_type_1_tree = parent_context
-        .get("ether_type_1")
-        .ok_or(DecodeError::Invalid(
-            "Symbol not found in context for length calculation",
-        ))?;
+pub fn ether_type_2_decode_callbackfn<'a>(
+    input: &'a [u8],
+    context: &BTreeMap<String, Arc<DerivationTree>>,
+) -> Result<(&'a [u8], Vec<u8>), DecodeError> {
+    let ether_type_1_tree = context.get("ether_type_1").ok_or(DecodeError::Invalid(
+        "Symbol not found in context for length calculation",
+    ))?;
 
     let ether_type_1_val = big_endian_bytes_to_usize(&ether_type_1_tree.to_bytes())?;
 
     // ether_type_1_val == ether_type_enum::ieee_802_1q_tpid
-    if ether_type_1_val == 0x8100 {
-        Ok(2)
+    let (slice_to_parse, remaining_input) = if ether_type_1_val == 0x8100 {
+        input.split_at(2)
     } else {
-        Ok(0)
-    }
+        input.split_at(0)
+    };
+
+    Ok((remaining_input, slice_to_parse.to_vec()))
 }
 
 #[cfg(test)]
