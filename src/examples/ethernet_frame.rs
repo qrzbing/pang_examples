@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use pang::{
-    DerivationTree, Grammar, exp, exp_cb, grammar, nt, parser::callback::big_endian_bytes_to_usize,
+    DerivationTree, Grammar, exp, exp_dc, grammar, nt, parser::callback::big_endian_bytes_to_usize,
     symbol::DecodeError, t_bytes, t_dyn,
 };
 
@@ -25,9 +25,9 @@ pub fn ethernet_frame_grammar() -> Grammar {
         "src_mac" => vec![exp(vec![t_bytes(6)])],
         "ether_type_1" => vec![exp(vec![t_bytes(2)])],
         "tci" => vec![
-            exp_cb(vec![t_dyn()], Some(tci_decode_callbackfn), None)
+            exp_dc(vec![t_dyn()], tci_decode_callbackfn)
         ],
-        "ether_type_2" => vec![exp_cb(vec![t_dyn()], Some(tci_decode_callbackfn), None)],
+        "ether_type_2" => vec![exp_dc(vec![t_dyn()], tci_decode_callbackfn)],
         "ethernet_body" => vec![exp(vec![t_dyn()])]
     }
 }

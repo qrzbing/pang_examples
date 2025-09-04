@@ -3,10 +3,9 @@
 use std::collections::{BTreeMap, HashSet};
 use std::sync::Arc;
 
-use pang::exp_cb;
-use pang::parser::callback::big_endian_bytes_to_usize;
 use pang::{
-    DerivationTree, Grammar, Language, exp, grammar, nt, symbol::DecodeError, t_bytes, t_dyn,
+    DerivationTree, Grammar, Language, exp, exp_dc, grammar, nt,
+    parser::callback::big_endian_bytes_to_usize, symbol::DecodeError, t_bytes, t_dyn,
 };
 
 pub fn ipv4_grammar() -> Grammar {
@@ -38,8 +37,8 @@ pub fn ipv4_grammar() -> Grammar {
         "header_checksum" => vec![exp(vec![t_bytes(2)])],
         "src_ip_addr" => vec![exp(vec![t_bytes(4)])],
         "dst_ip_addr" => vec![exp(vec![t_bytes(4)])],
-        "options" => vec![exp_cb(vec![t_dyn()], Some(options_decode_callbackfn), None)],
-        "ipv4_body" => vec![exp_cb(vec![t_dyn()], Some(body_decode_callbackfn), None)],
+        "options" => vec![exp_dc(vec![t_dyn()], options_decode_callbackfn)],
+        "ipv4_body" => vec![exp_dc(vec![t_dyn()], body_decode_callbackfn)],
     }
 }
 
@@ -84,7 +83,7 @@ pub fn body_decode_callbackfn<'a>(
 
 pub fn ipv4_options_grammar() -> Grammar {
     grammar! {
-        "options" => vec![exp_cb(vec![nt("ipv4_options")], Some(options_decode_callbackfn), None)],
+        "options" => vec![exp_dc(vec![nt("ipv4_options")], options_decode_callbackfn)],
         "ipv4_options" => vec![
             exp(vec![nt("ipv4_option")]),
             exp(vec![nt("ipv4_option"), nt("ipv4_options")]),
@@ -95,7 +94,7 @@ pub fn ipv4_options_grammar() -> Grammar {
         ],
         "ipv4_option_len" => vec![exp(vec![t_bytes(1)])],
         "ipv4_option_body" => vec![
-            exp_cb(vec![t_dyn()], Some(ipv4_option_body_decode_callbackfn), None)
+            exp_dc(vec![t_dyn()], ipv4_option_body_decode_callbackfn)
         ],
     }
 }

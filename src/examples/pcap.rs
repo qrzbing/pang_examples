@@ -3,9 +3,8 @@
 use std::collections::{BTreeMap, HashSet};
 use std::sync::Arc;
 
-use pang::exp_cb;
 use pang::{
-    DerivationTree, Grammar, Language, exp, grammar, nt,
+    DerivationTree, Grammar, Language, exp, exp_dc, grammar, nt,
     parser::callback::little_endian_bytes_to_usize, symbol::DecodeError, t_bytes, t_bytes_val,
     t_dyn,
 };
@@ -54,7 +53,7 @@ fn pcap_grammar() -> Grammar {
         "ts_usec" => vec![exp(vec![t_bytes(4)])],
         "incl_len" => vec![exp(vec![t_bytes(4)])],
         "orig_len" => vec![exp(vec![t_bytes(4)])],
-        "pcap_body" => vec![exp_cb(vec![t_dyn()], Some(body_decode_callbackfn), None)]
+        "pcap_body" => vec![exp_dc(vec![t_dyn()], body_decode_callbackfn)]
     }
 }
 
@@ -85,6 +84,8 @@ pub fn pcap_lang() -> Language {
 #[cfg(test)]
 mod tests {
     use std::{env, fs, sync::Once};
+
+    use pang::exp_dc;
 
     use crate::examples::{
         ethernet_frame::ethernet_frame_grammar,
@@ -138,7 +139,7 @@ mod tests {
         let grammar = pcap_grammar()
             .extend_grammar(&grammar! {
                 "pcap_body" => vec![
-                    exp_cb(vec![nt("ethernet_frame")], Some(body_decode_callbackfn), None)
+                    exp_dc(vec![nt("ethernet_frame")], body_decode_callbackfn)
                 ]
             })
             .extend_grammar(&ethernet_frame_grammar())
