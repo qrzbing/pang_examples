@@ -93,7 +93,7 @@ mod tests {
     #[test]
     fn test_ethernet_frame_grammar() {
         setup_logger();
-        let lang = Language::new(ethernet_frame_grammar(), "ethernet_frame", HashSet::new());
+        let lang = Language::new(&ethernet_frame_grammar(), "ethernet_frame", HashSet::new());
         let input = &[
             0x0, 0x0, 0x0, 0x0, 0x0, 0x0, // dst_mac
             0x0, 0x0, 0x0, 0x0, 0x0, 0x0, // src_mac

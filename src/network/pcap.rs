@@ -78,7 +78,7 @@ pub fn pcap_lang() -> Language {
 
     assert!(grammar.is_valid("pcap"));
 
-    Language::new(grammar, "pcap", HashSet::new())
+    Language::new(&grammar, "pcap", HashSet::new())
 }
 
 #[cfg(test)]
@@ -87,7 +87,7 @@ mod tests {
 
     use pang::exp_dc;
 
-    use crate::examples::{
+    use crate::network::{
         ethernet_frame::ethernet_frame_grammar,
         ipv4::{ipv4_grammar, ipv4_options_grammar},
     };
@@ -152,7 +152,7 @@ mod tests {
             .extend_grammar(&ipv4_options_grammar());
 
         assert!(grammar.is_valid("pcap"));
-        let lang = Language::new(grammar, "pcap", HashSet::new());
+        let lang = Language::new(&grammar, "pcap", HashSet::new());
         let tree = lang.parse(&inp_data).unwrap();
         println!("Tree:\n{}", tree);
     }

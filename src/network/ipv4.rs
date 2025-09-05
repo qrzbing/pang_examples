@@ -124,7 +124,7 @@ pub fn ipv4_lang_less() -> Language {
 
     assert!(grammar.is_valid("ipv4_packet"));
 
-    Language::new(grammar, "ipv4_packet", HashSet::new())
+    Language::new(&grammar, "ipv4_packet", HashSet::new())
 }
 
 /// Generate a IPv4 full language.
@@ -133,7 +133,7 @@ pub fn ipv4_lang_full() -> Language {
 
     assert!(grammar.is_valid("ipv4_packet"));
 
-    Language::new(grammar, "ipv4_packet", HashSet::new())
+    Language::new(&grammar, "ipv4_packet", HashSet::new())
 }
 
 #[cfg(test)]
