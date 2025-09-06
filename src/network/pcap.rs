@@ -11,14 +11,14 @@ use pang::{
 
 fn pcap_grammar() -> Grammar {
     grammar! {
-        "pcap" => vec![exp(vec![nt("pcap_seq")])],
-        "pcap_seq" => vec![
-            exp(vec![
+        "pcap" => [exp([nt("pcap_seq")])],
+        "pcap_seq" => [
+            exp([
                 nt("header"),
                 nt("packets"),
             ])
         ],
-        "header" => vec![exp(vec![
+        "header" => [exp([
             t_bytes_val(&[0xd4, 0xc3, 0xb2, 0xa1]),
             nt("version_major"),
             nt("version_minor"),
@@ -27,20 +27,20 @@ fn pcap_grammar() -> Grammar {
             nt("snaplen"),
             nt("network"),
         ])],
-        "version_major" => vec![exp(vec![t_bytes_val(&[0x02, 0x00])])],
-        "version_minor" => vec![exp(vec![t_bytes(2)])],
-        "thiszone" => vec![exp(vec![t_bytes(4)])],
-        "sigfigs" => vec![exp(vec![t_bytes(4)])],
-        "snaplen" => vec![exp(vec![t_bytes(4)])],
-        "network" => vec![exp(vec![t_bytes(4)])],
-        "packets" => vec![
-            exp(vec![nt("packet")]),
-            exp(vec![nt("packet"), nt("packets")]),
-            exp(vec![t_dyn()]),
+        "version_major" => [exp([t_bytes_val(&[0x02, 0x00])])],
+        "version_minor" => [exp([t_bytes(2)])],
+        "thiszone" => [exp([t_bytes(4)])],
+        "sigfigs" => [exp([t_bytes(4)])],
+        "snaplen" => [exp([t_bytes(4)])],
+        "network" => [exp([t_bytes(4)])],
+        "packets" => [
+            exp([nt("packet")]),
+            exp([nt("packet"), nt("packets")]),
+            exp([t_dyn()]),
         ],
-        "packet" => vec![
+        "packet" => [
             exp(
-                vec![
+                [
                     nt("ts_sec"),
                     nt("ts_usec"),
                     nt("incl_len"),
@@ -49,11 +49,11 @@ fn pcap_grammar() -> Grammar {
                 ]
             )
         ],
-        "ts_sec" => vec![exp(vec![t_bytes(4)])],
-        "ts_usec" => vec![exp(vec![t_bytes(4)])],
-        "incl_len" => vec![exp(vec![t_bytes(4)])],
-        "orig_len" => vec![exp(vec![t_bytes(4)])],
-        "pcap_body" => vec![exp_dc(vec![t_dyn()], body_decode_callbackfn)]
+        "ts_sec" => [exp([t_bytes(4)])],
+        "ts_usec" => [exp([t_bytes(4)])],
+        "incl_len" => [exp([t_bytes(4)])],
+        "orig_len" => [exp([t_bytes(4)])],
+        "pcap_body" => [exp_dc([t_dyn()], body_decode_callbackfn)]
     }
 }
 
@@ -138,14 +138,14 @@ mod tests {
 
         let grammar = pcap_grammar()
             .extend_grammar(&grammar! {
-                "pcap_body" => vec![
-                    exp_dc(vec![nt("ethernet_frame")], body_decode_callbackfn)
+                "pcap_body" => [
+                    exp_dc([nt("ethernet_frame")], body_decode_callbackfn)
                 ]
             })
             .extend_grammar(&ethernet_frame_grammar())
             .extend_grammar(&grammar! {
-                "ethernet_body" => vec![
-                    exp(vec![nt("ipv4_packet")])
+                "ethernet_body" => [
+                    exp([nt("ipv4_packet")])
                 ]
             })
             .extend_grammar(&ipv4_grammar())

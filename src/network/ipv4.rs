@@ -10,9 +10,9 @@ use pang::{
 
 pub fn ipv4_grammar() -> Grammar {
     grammar! {
-        "ipv4_packet" => vec![exp(vec![nt("ipv4_seq")])],
-        "ipv4_seq" => vec![
-            exp(vec![
+        "ipv4_packet" => [exp([nt("ipv4_seq")])],
+        "ipv4_seq" => [
+            exp([
                 nt("b1"),
                 nt("b2"),
                 nt("total_length"),
@@ -27,18 +27,18 @@ pub fn ipv4_grammar() -> Grammar {
                 nt("ipv4_body"),
             ])
         ],
-        "b1" => vec![exp(vec![t_bytes(1)])],
-        "b2" => vec![exp(vec![t_bytes(1)])],
-        "total_length" => vec![exp(vec![t_bytes(2)])],
-        "identification" => vec![exp(vec![t_bytes(2)])],
-        "b67" => vec![exp(vec![t_bytes(2)])],
-        "ttl" => vec![exp(vec![t_bytes(1)])],
-        "protocol" => vec![exp(vec![t_bytes(1)])],
-        "header_checksum" => vec![exp(vec![t_bytes(2)])],
-        "src_ip_addr" => vec![exp(vec![t_bytes(4)])],
-        "dst_ip_addr" => vec![exp(vec![t_bytes(4)])],
-        "options" => vec![exp_dc(vec![t_dyn()], options_decode_callbackfn)],
-        "ipv4_body" => vec![exp_dc(vec![t_dyn()], body_decode_callbackfn)],
+        "b1" => [exp([t_bytes(1)])],
+        "b2" => [exp([t_bytes(1)])],
+        "total_length" => [exp([t_bytes(2)])],
+        "identification" => [exp([t_bytes(2)])],
+        "b67" => [exp([t_bytes(2)])],
+        "ttl" => [exp([t_bytes(1)])],
+        "protocol" => [exp([t_bytes(1)])],
+        "header_checksum" => [exp([t_bytes(2)])],
+        "src_ip_addr" => [exp([t_bytes(4)])],
+        "dst_ip_addr" => [exp([t_bytes(4)])],
+        "options" => [exp_dc([t_dyn()], options_decode_callbackfn)],
+        "ipv4_body" => [exp_dc([t_dyn()], body_decode_callbackfn)],
     }
 }
 
@@ -83,18 +83,18 @@ pub fn body_decode_callbackfn<'a>(
 
 pub fn ipv4_options_grammar() -> Grammar {
     grammar! {
-        "options" => vec![exp_dc(vec![nt("ipv4_options")], options_decode_callbackfn)],
-        "ipv4_options" => vec![
-            exp(vec![nt("ipv4_option")]),
-            exp(vec![nt("ipv4_option"), nt("ipv4_options")]),
-            exp(vec![t_dyn()])
+        "options" => [exp_dc([nt("ipv4_options")], options_decode_callbackfn)],
+        "ipv4_options" => [
+            exp([nt("ipv4_option")]),
+            exp([nt("ipv4_option"), nt("ipv4_options")]),
+            exp([t_dyn()])
         ],
-        "ipv4_option" => vec![
-            exp(vec![t_bytes(1), nt("ipv4_option_len"), nt("ipv4_option_body")]),
+        "ipv4_option" => [
+            exp([t_bytes(1), nt("ipv4_option_len"), nt("ipv4_option_body")]),
         ],
-        "ipv4_option_len" => vec![exp(vec![t_bytes(1)])],
-        "ipv4_option_body" => vec![
-            exp_dc(vec![t_dyn()], ipv4_option_body_decode_callbackfn)
+        "ipv4_option_len" => [exp([t_bytes(1)])],
+        "ipv4_option_body" => [
+            exp_dc([t_dyn()], ipv4_option_body_decode_callbackfn)
         ],
     }
 }

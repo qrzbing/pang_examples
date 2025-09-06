@@ -10,9 +10,9 @@ use pang::{
 
 pub fn ethernet_frame_grammar() -> Grammar {
     grammar! {
-        "ethernet_frame" => vec![exp(vec![nt("ethernet_frame_seq")])],
-        "ethernet_frame_seq" => vec![
-            exp(vec![
+        "ethernet_frame" => [exp([nt("ethernet_frame_seq")])],
+        "ethernet_frame_seq" => [
+            exp([
                 nt("dst_mac"),
                 nt("src_mac"),
                 nt("ether_type_1"),
@@ -21,14 +21,14 @@ pub fn ethernet_frame_grammar() -> Grammar {
                 nt("ethernet_body")
             ])
         ],
-        "dst_mac" => vec![exp(vec![t_bytes(6)])],
-        "src_mac" => vec![exp(vec![t_bytes(6)])],
-        "ether_type_1" => vec![exp(vec![t_bytes(2)])],
-        "tci" => vec![
-            exp_dc(vec![t_dyn()], tci_decode_callbackfn)
+        "dst_mac" => [exp([t_bytes(6)])],
+        "src_mac" => [exp([t_bytes(6)])],
+        "ether_type_1" => [exp([t_bytes(2)])],
+        "tci" => [
+            exp_dc([t_dyn()], tci_decode_callbackfn)
         ],
-        "ether_type_2" => vec![exp_dc(vec![t_dyn()], tci_decode_callbackfn)],
-        "ethernet_body" => vec![exp(vec![t_dyn()])]
+        "ether_type_2" => [exp_dc([t_dyn()], tci_decode_callbackfn)],
+        "ethernet_body" => [exp([t_dyn()])]
     }
 }
 

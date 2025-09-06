@@ -12,29 +12,29 @@ use pang::{exp_ec, t_bytes_val};
 
 pub fn png_basic_grammar() -> Grammar {
     grammar! {
-        "png" => vec![
-            exp(vec![
+        "png" => [
+            exp([
                 nt("magic"), nt("chunks")
             ])
         ],
-        "magic" => vec![exp(vec![t_bytes_val(&[137, 80, 78, 71, 13, 10, 26, 10])])],
-        "chunks" => vec![exp(vec![t_dyn()])],
+        "magic" => [exp([t_bytes_val(&[137, 80, 78, 71, 13, 10, 26, 10])])],
+        "chunks" => [exp([t_dyn()])],
     }
 }
 
 pub fn png_basic_chunks_grammar() -> Grammar {
     grammar! {
-        "chunks" => vec![
-            exp(vec![nt("chunk"), nt("chunks")]),
-            exp(vec![nt("chunk")]),
+        "chunks" => [
+            exp([nt("chunk"), nt("chunks")]),
+            exp([nt("chunk")]),
         ],
-        "chunk" => vec![
-            exp_ec(vec![nt("chunk_len"), nt("chunk_type"), nt("chunk_data"), nt("chunk_crc")], chunk_encode_callback)
+        "chunk" => [
+            exp_ec([nt("chunk_len"), nt("chunk_type"), nt("chunk_data"), nt("chunk_crc")], chunk_encode_callback)
         ],
-        "chunk_len" => vec![exp(vec![t_bytes(4)])],
-        "chunk_type" => vec![exp(vec![t_bytes(4)])],
-        "chunk_data" => vec![exp_dc(vec![t_dyn()], chunk_data_decode_callbackfn)],
-        "chunk_crc" => vec![exp(vec![t_bytes(4)])],
+        "chunk_len" => [exp([t_bytes(4)])],
+        "chunk_type" => [exp([t_bytes(4)])],
+        "chunk_data" => [exp_dc([t_dyn()], chunk_data_decode_callbackfn)],
+        "chunk_crc" => [exp([t_bytes(4)])],
     }
 }
 
