@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use pang::{
     DerivationTree, Grammar, Language, exp, exp_dc, grammar, nt,
-    parser::callback::big_endian_bytes_to_usize, symbol::DecodeError, t_bytes, t_dyn,
+    parser::callback::big_endian_bytes_to_usize, symbol::DecodeError, t_bytes, t_dyn, tl_bytes,
 };
 
 pub fn ipv4_grammar() -> Grammar {
@@ -13,30 +13,20 @@ pub fn ipv4_grammar() -> Grammar {
         "ipv4_packet" => [exp([nt("ipv4_seq")])],
         "ipv4_seq" => [
             exp([
-                nt("b1"),
-                nt("b2"),
-                nt("total_length"),
-                nt("identification"),
-                nt("b67"),
-                nt("ttl"),
-                nt("protocol"),
-                nt("header_checksum"),
-                nt("src_ip_addr"),
-                nt("dst_ip_addr"),
+                tl_bytes("b1", 1),
+                tl_bytes("b2", 1),
+                tl_bytes("total_length", 2),
+                tl_bytes("identification", 2),
+                tl_bytes("b67", 2),
+                tl_bytes("ttl", 1),
+                tl_bytes("protocol", 1),
+                tl_bytes("header_checksum", 2),
+                tl_bytes("src_ip_addr", 4),
+                tl_bytes("dst_ip_addr", 4),
                 nt("options"),
                 nt("ipv4_body"),
             ])
         ],
-        "b1" => [exp([t_bytes(1)])],
-        "b2" => [exp([t_bytes(1)])],
-        "total_length" => [exp([t_bytes(2)])],
-        "identification" => [exp([t_bytes(2)])],
-        "b67" => [exp([t_bytes(2)])],
-        "ttl" => [exp([t_bytes(1)])],
-        "protocol" => [exp([t_bytes(1)])],
-        "header_checksum" => [exp([t_bytes(2)])],
-        "src_ip_addr" => [exp([t_bytes(4)])],
-        "dst_ip_addr" => [exp([t_bytes(4)])],
         "options" => [exp_dc([t_dyn()], options_decode_callbackfn)],
         "ipv4_body" => [exp_dc([t_dyn()], body_decode_callbackfn)],
     }
@@ -47,7 +37,7 @@ pub fn options_decode_callbackfn<'a>(
     context: &BTreeMap<String, Arc<DerivationTree>>,
 ) -> Result<(&'a [u8], Vec<u8>), DecodeError> {
     let b1_tree = context.get("b1").ok_or(DecodeError::Invalid(
-        "Symbol not found in context for length calculation",
+        "Symbol not found in context for length calculation".into(),
     ))?;
     let b1 = big_endian_bytes_to_usize(&b1_tree.to_bytes())?;
 
@@ -64,12 +54,12 @@ pub fn body_decode_callbackfn<'a>(
     context: &BTreeMap<String, Arc<DerivationTree>>,
 ) -> Result<(&'a [u8], Vec<u8>), DecodeError> {
     let total_length_tree = context.get("total_length").ok_or(DecodeError::Invalid(
-        "Symbol not found in context for length calculation",
+        "Symbol not found in context for length calculation".into(),
     ))?;
     let total_length = big_endian_bytes_to_usize(&total_length_tree.to_bytes())?;
 
     let b1_tree = context.get("b1").ok_or(DecodeError::Invalid(
-        "Symbol not found in context for length calculation",
+        "Symbol not found in context for length calculation".into(),
     ))?;
     let b1 = big_endian_bytes_to_usize(&b1_tree.to_bytes())?;
 
@@ -90,9 +80,8 @@ pub fn ipv4_options_grammar() -> Grammar {
             exp([t_dyn()])
         ],
         "ipv4_option" => [
-            exp([t_bytes(1), nt("ipv4_option_len"), nt("ipv4_option_body")]),
+            exp([t_bytes(1), tl_bytes("ipv4_option_len", 1), nt("ipv4_option_body")]),
         ],
-        "ipv4_option_len" => [exp([t_bytes(1)])],
         "ipv4_option_body" => [
             exp_dc([t_dyn()], ipv4_option_body_decode_callbackfn)
         ],
@@ -104,7 +93,7 @@ pub fn ipv4_option_body_decode_callbackfn<'a>(
     context: &BTreeMap<String, Arc<DerivationTree>>,
 ) -> Result<(&'a [u8], Vec<u8>), DecodeError> {
     let ipv4_option_len_tree = context.get("incl_len").ok_or(DecodeError::Invalid(
-        "Symbol not found in context for length calculation",
+        "Symbol not found in context for length calculation".into(),
     ))?;
 
     let ipv4_option_len = big_endian_bytes_to_usize(&ipv4_option_len_tree.to_bytes())?;

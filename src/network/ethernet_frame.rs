@@ -4,8 +4,7 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use pang::{
-    DerivationTree, Grammar, exp, exp_dc, grammar, nt, parser::callback::big_endian_bytes_to_usize,
-    symbol::DecodeError, t_bytes, t_dyn,
+    exp, exp_dc, grammar, nt, parser::callback::big_endian_bytes_to_usize, symbol::DecodeError, t_dyn, tl_bytes, DerivationTree, Grammar
 };
 
 pub fn ethernet_frame_grammar() -> Grammar {
@@ -13,17 +12,14 @@ pub fn ethernet_frame_grammar() -> Grammar {
         "ethernet_frame" => [exp([nt("ethernet_frame_seq")])],
         "ethernet_frame_seq" => [
             exp([
-                nt("dst_mac"),
-                nt("src_mac"),
-                nt("ether_type_1"),
+                tl_bytes("dst_mac", 6),
+                tl_bytes("src_mac", 6),
+                tl_bytes("ether_type_1", 2),
                 nt("tci"),
                 nt("ether_type_2"),
                 nt("ethernet_body")
             ])
         ],
-        "dst_mac" => [exp([t_bytes(6)])],
-        "src_mac" => [exp([t_bytes(6)])],
-        "ether_type_1" => [exp([t_bytes(2)])],
         "tci" => [
             exp_dc([t_dyn()], tci_decode_callbackfn)
         ],
@@ -37,7 +33,7 @@ pub fn tci_decode_callbackfn<'a>(
     context: &BTreeMap<String, Arc<DerivationTree>>,
 ) -> Result<(&'a [u8], Vec<u8>), DecodeError> {
     let ether_type_1_tree = context.get("ether_type_1").ok_or(DecodeError::Invalid(
-        "Symbol not found in context for length calculation",
+        "Symbol not found in context for length calculation".into(),
     ))?;
 
     let ether_type_1_val = big_endian_bytes_to_usize(&ether_type_1_tree.to_bytes())?;
@@ -57,7 +53,7 @@ pub fn ether_type_2_decode_callbackfn<'a>(
     context: &BTreeMap<String, Arc<DerivationTree>>,
 ) -> Result<(&'a [u8], Vec<u8>), DecodeError> {
     let ether_type_1_tree = context.get("ether_type_1").ok_or(DecodeError::Invalid(
-        "Symbol not found in context for length calculation",
+        "Symbol not found in context for length calculation".into(),
     ))?;
 
     let ether_type_1_val = big_endian_bytes_to_usize(&ether_type_1_tree.to_bytes())?;

@@ -5,19 +5,18 @@ use std::{collections::BTreeMap, sync::Arc};
 use crc::{CRC_32_ISO_HDLC, Crc};
 
 use pang::{
-    DerivationTree, Grammar, exp, exp_dc, grammar, new_node, nt,
-    parser::callback::big_endian_bytes_to_usize, symbol::DecodeError, t_bytes, t_dyn,
+    DerivationTree, Grammar, exp, exp_dc, exp_ec, grammar, new_node, nt,
+    parser::callback::big_endian_bytes_to_usize, symbol::DecodeError, t_bytes_val, t_dyn, tl_bytes,
+    tl_bytes_val,
 };
-use pang::{exp_ec, t_bytes_val};
 
 pub fn png_basic_grammar() -> Grammar {
     grammar! {
         "png" => [
             exp([
-                nt("magic"), nt("chunks")
+                tl_bytes_val("magic", &[137, 80, 78, 71, 13, 10, 26, 10]), nt("chunks")
             ])
         ],
-        "magic" => [exp([t_bytes_val(&[137, 80, 78, 71, 13, 10, 26, 10])])],
         "chunks" => [exp([t_dyn()])],
     }
 }
@@ -29,12 +28,11 @@ pub fn png_basic_chunks_grammar() -> Grammar {
             exp([nt("chunk")]),
         ],
         "chunk" => [
-            exp_ec([nt("chunk_len"), nt("chunk_type"), nt("chunk_data"), nt("chunk_crc")], chunk_encode_callback)
+            exp_ec([
+                tl_bytes("chunk_len", 4), tl_bytes("chunk_type", 4),
+                nt("chunk_data"), tl_bytes("chunk_crc", 4)], chunk_encode_callback)
         ],
-        "chunk_len" => [exp([t_bytes(4)])],
-        "chunk_type" => [exp([t_bytes(4)])],
         "chunk_data" => [exp_dc([t_dyn()], chunk_data_decode_callbackfn)],
-        "chunk_crc" => [exp([t_bytes(4)])],
     }
 }
 
@@ -43,7 +41,7 @@ fn chunk_data_decode_callbackfn<'a>(
     context: &BTreeMap<String, Arc<DerivationTree>>,
 ) -> Result<(&'a [u8], Vec<u8>), DecodeError> {
     let chunk_len_tree = context.get("chunk_len").ok_or(DecodeError::Invalid(
-        "Symbol not found in context for length calculation",
+        "Symbol not found in context for length calculation".into(),
     ))?;
 
     let chunk_len = big_endian_bytes_to_usize(&chunk_len_tree.to_bytes())?;

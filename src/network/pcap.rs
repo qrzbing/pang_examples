@@ -3,9 +3,10 @@
 use std::collections::{BTreeMap, HashSet};
 use std::sync::Arc;
 
+use pang::tl_bytes;
 use pang::{
     DerivationTree, Grammar, Language, exp, exp_dc, grammar, nt,
-    parser::callback::little_endian_bytes_to_usize, symbol::DecodeError, t_bytes, t_bytes_val,
+    parser::callback::little_endian_bytes_to_usize, symbol::DecodeError, t_bytes_val, tl_bytes_val,
     t_dyn,
 };
 
@@ -20,19 +21,13 @@ fn pcap_grammar() -> Grammar {
         ],
         "header" => [exp([
             t_bytes_val(&[0xd4, 0xc3, 0xb2, 0xa1]),
-            nt("version_major"),
-            nt("version_minor"),
-            nt("thiszone"),
-            nt("sigfigs"),
-            nt("snaplen"),
-            nt("network"),
+            tl_bytes_val("version_major", &[0x02, 0x00]),
+            tl_bytes("version_minor", 2),
+            tl_bytes("thiszone", 4),
+            tl_bytes("sigfigs", 4),
+            tl_bytes("snaplen", 4),
+            tl_bytes("network", 4),
         ])],
-        "version_major" => [exp([t_bytes_val(&[0x02, 0x00])])],
-        "version_minor" => [exp([t_bytes(2)])],
-        "thiszone" => [exp([t_bytes(4)])],
-        "sigfigs" => [exp([t_bytes(4)])],
-        "snaplen" => [exp([t_bytes(4)])],
-        "network" => [exp([t_bytes(4)])],
         "packets" => [
             exp([nt("packet")]),
             exp([nt("packet"), nt("packets")]),
@@ -41,18 +36,14 @@ fn pcap_grammar() -> Grammar {
         "packet" => [
             exp(
                 [
-                    nt("ts_sec"),
-                    nt("ts_usec"),
-                    nt("incl_len"),
-                    nt("orig_len"),
+                    tl_bytes("ts_sec", 4),
+                    tl_bytes("ts_usec", 4),
+                    tl_bytes("incl_len", 4),
+                    tl_bytes("orig_len", 4),
                     nt("pcap_body"),
                 ]
             )
         ],
-        "ts_sec" => [exp([t_bytes(4)])],
-        "ts_usec" => [exp([t_bytes(4)])],
-        "incl_len" => [exp([t_bytes(4)])],
-        "orig_len" => [exp([t_bytes(4)])],
         "pcap_body" => [exp_dc([t_dyn()], body_decode_callbackfn)]
     }
 }
@@ -62,7 +53,7 @@ pub fn body_decode_callbackfn<'a>(
     context: &BTreeMap<String, Arc<DerivationTree>>,
 ) -> Result<(&'a [u8], Vec<u8>), DecodeError> {
     let incl_len_tree = context.get("incl_len").ok_or(DecodeError::Invalid(
-        "Symbol not found in context for length calculation",
+        "Symbol not found in context for length calculation".into(),
     ))?;
 
     let incl_len = little_endian_bytes_to_usize(&incl_len_tree.to_bytes())?;
