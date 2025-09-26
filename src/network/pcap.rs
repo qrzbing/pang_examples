@@ -6,8 +6,8 @@ use std::sync::Arc;
 use pang::tl_bytes;
 use pang::{
     DerivationTree, Grammar, Language, exp, exp_dc, grammar, nt,
-    parser::callback::little_endian_bytes_to_usize, symbol::DecodeError, t_bytes_val, tl_bytes_val,
-    t_dyn,
+    parser::callback::little_endian_bytes_to_usize, symbol::DecodeError, t_bytes_val, t_dyn,
+    tl_bytes_val,
 };
 
 fn pcap_grammar() -> Grammar {
