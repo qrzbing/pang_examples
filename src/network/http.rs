@@ -18,12 +18,10 @@ use crate::helper::find_symbol_with_offset;
 pub fn http_grammar() -> Grammar {
     grammar! {
         "http-message" => [exp([
-            nt("start-line"), nt("field-lines"),
+            nt("start-line"), nomt("field-line", 0),
             nt("CRLF"), nt("message-body")
         ])],
-        "field-lines" => [exp_dc([nomt("field-line", 0)], find_crlfx2_decode_callback)],
         "start-line" => [exp_dc([t_dyn()], find_crlf_decode_callback)],
-        "field-line" => [exp_dc([t_dyn()], find_crlf_decode_callback)],
         "message-body" => [exp([t_dyn()])],
         "field-line" => [exp([
             nt("field-name"), t_bytes_val(b":"), nt("field-value"), nt("CRLF")
