@@ -9,7 +9,7 @@
 use std::{collections::BTreeMap, sync::Arc};
 
 use pang::{
-    DerivationTree, Grammar, exp, exp_dc, grammar, nt, nt_star, symbol::DecodeError, t_bytes_val,
+    DerivationTree, Grammar, exp, exp_dc, grammar, nt, nomt, symbol::DecodeError, t_bytes_val,
     t_dyn,
 };
 
@@ -21,7 +21,7 @@ pub fn http_grammar() -> Grammar {
             nt("start-line"), nt("field-lines"),
             nt("CRLF"), nt("message-body")
         ])],
-        "field-lines" => [exp_dc([nt_star("field-line")], find_crlfx2_decode_callback)],
+        "field-lines" => [exp_dc([nomt("field-line", 0)], find_crlfx2_decode_callback)],
         "start-line" => [exp_dc([t_dyn()], find_crlf_decode_callback)],
         "field-line" => [exp_dc([t_dyn()], find_crlf_decode_callback)],
         "message-body" => [exp([t_dyn()])],
@@ -90,7 +90,6 @@ mod tests {
         let tree = grammar
             .parse_combinator(&http_message, "http-message")
             .unwrap();
-        println!("{}", tree);
-        println!("{}", String::from_utf8_lossy(&tree.to_bytes()));
+        assert_eq!(&tree.to_bytes(), &http_message);
     }
 }
