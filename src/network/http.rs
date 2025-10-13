@@ -9,7 +9,7 @@
 use std::{collections::BTreeMap, sync::Arc};
 
 use pang::{
-    DerivationTree, Grammar, exp, exp_dc, grammar, nt, nomt, symbol::DecodeError, t_bytes_val,
+    DerivationTree, Grammar, exp, exp_dc, grammar, nt, nt_nom, symbol::DecodeError, t_bytes_val,
     t_dyn,
 };
 
@@ -18,7 +18,7 @@ use crate::helper::find_symbol_with_offset;
 pub fn http_grammar() -> Grammar {
     grammar! {
         "http-message" => [exp([
-            nt("start-line"), nomt("field-line", 0),
+            nt("start-line"), nt_nom("field-line", 0),
             nt("CRLF"), nt("message-body")
         ])],
         "start-line" => [exp_dc([t_dyn()], find_crlf_decode_callback)],
